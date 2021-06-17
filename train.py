@@ -17,8 +17,8 @@ def train(epo_num=50, show_vgg_params=False):
     vgg_model = VGGNet(requires_grad=True, show_params=show_vgg_params)
     fcn_model = FCNs(pretrained_net=vgg_model, n_class=2)
     fcn_model = fcn_model.to(device)
-    criterion = nn.BCELoss().to(device)
-    optimizer = optim.SGD(fcn_model.parameters(), lr=1e-2, momentum=0.7)
+    criterion = nn.CrossEntropyLoss(torch.tensor([10, 1])).to(device)
+    optimizer = optim.SGD(fcn_model.parameters(), lr=0.002, momentum=0.7)
  
     all_train_iter_loss = []
     all_test_iter_loss = []
@@ -47,11 +47,10 @@ def train(epo_num=50, show_vgg_params=False):
             all_train_iter_loss.append(iter_loss)
             train_loss += iter_loss
             optimizer.step()
- 
-            output_np = output.cpu().detach().numpy().copy() # output_np.shape = (4, 2, 160, 160)  
-            output_np = np.argmin(output_np, axis=1)
-            bag_msk_np = bag_msk.cpu().detach().numpy().copy() # bag_msk_np.shape = (4, 2, 160, 160) 
-            bag_msk_np = np.argmin(bag_msk_np, axis=1)
+#             output_np = output.cpu().detach().numpy().copy() # output_np.shape = (4, 2, 160, 160)  
+#             output_np = np.argmin(output_np, axis=1)
+#             bag_msk_np = bag_msk.cpu().detach().numpy().copy() # bag_msk_np.shape = (4, 2, 160, 160) 
+#             bag_msk_np = np.argmin(bag_msk_np, axis=1)
  
         test_loss = 0
         fcn_model.eval()
@@ -68,11 +67,10 @@ def train(epo_num=50, show_vgg_params=False):
                 iter_loss = loss.item()
                 all_test_iter_loss.append(iter_loss)
                 test_loss += iter_loss
- 
-                output_np = output.cpu().detach().numpy().copy() # output_np.shape = (4, 2, 160, 160)  
-                output_np = np.argmin(output_np, axis=1)
-                bag_msk_np = bag_msk.cpu().detach().numpy().copy() # bag_msk_np.shape = (4, 2, 160, 160) 
-                bag_msk_np = np.argmin(bag_msk_np, axis=1)
+#                 output_np = output.cpu().detach().numpy().copy() # output_np.shape = (4, 2, 160, 160)  
+#                 output_np = np.argmin(output_np, axis=1)
+#                 bag_msk_np = bag_msk.cpu().detach().numpy().copy() # bag_msk_np.shape = (4, 2, 160, 160) 
+#                 bag_msk_np = np.argmin(bag_msk_np, axis=1)
         
         cur_time = datetime.now()
         h, remainder = divmod((cur_time - prev_time).seconds, 3600)
@@ -84,7 +82,7 @@ def train(epo_num=50, show_vgg_params=False):
                 %(train_loss/len(train_dataloader), test_loss/len(test_dataloader), time_str))
         
  
-        if np.mod(epo, 5) == 0:
+        if np.mod(epo+1, 5) == 0:
             torch.save(fcn_model, 'checkpoints/fcn_model_{}.pt'.format(epo))
             print('saveing checkpoints/fcn_model_{}.pt'.format(epo))
  
